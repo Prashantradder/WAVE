@@ -65,7 +65,7 @@ def open_register_window():
     
     register_window = tk.Toplevel(root)
     register_window.title("Register")
-    register_window.geometry("300x400")
+    register_window.geometry("600x500")
     
     label_reg_username = tk.Label(register_window, text="Username")
     label_reg_username.pack(pady=5)
