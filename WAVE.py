@@ -1,27 +1,25 @@
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk  # Pillow library for image handling
-import os
+import json
 
-# File to store user credentials
-CREDENTIALS_FILE = "user_credentials.txt"
+# File to store user credentials and details
+CREDENTIALS_FILE = "user_credentials.json"
 
-# Function to load user credentials from file
+# Load user credentials from file
 def load_credentials():
-    credentials = {}
-    if os.path.exists(CREDENTIALS_FILE):
+    try:
         with open(CREDENTIALS_FILE, "r") as file:
-            for line in file:
-                username, password = line.strip().split(":")
-                credentials[username] = password
-    return credentials
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
 
-# Function to save user credentials to file
-def save_credentials(username, password):
-    with open(CREDENTIALS_FILE, "a") as file:
-        file.write(f"{username}:{password}\n")
+# Save user credentials to file
+def save_credentials(credentials):
+    with open(CREDENTIALS_FILE, "w") as file:
+        json.dump(credentials, file, indent=4)
 
-# Load existing user credentials
+# Initialize credentials
 user_credentials = load_credentials()
 
 # Function to handle the login process
@@ -29,10 +27,10 @@ def login():
     username = entry_username.get()
     password = entry_password.get()
     
-    if username in user_credentials and user_credentials[username] == password:
+    if username in user_credentials and user_credentials[username]['password'] == password:
         messagebox.showinfo("Login Successful", "Welcome!")
         root.destroy()  # Close the login window
-        open_dashboard()
+        open_dashboard(username)
     else:
         messagebox.showerror("Login Failed", "Invalid username or password")
 
@@ -40,22 +38,34 @@ def login():
 def register():
     reg_username = entry_reg_username.get()
     reg_password = entry_reg_password.get()
+    reg_name = entry_reg_name.get()
+    reg_age = entry_reg_age.get()
+    reg_section = entry_reg_section.get()
+    reg_course = entry_reg_course.get()
+    reg_address = entry_reg_address.get()
     
     if reg_username in user_credentials:
         messagebox.showerror("Registration Failed", "Username already exists")
     else:
-        user_credentials[reg_username] = reg_password
-        save_credentials(reg_username, reg_password)
+        user_credentials[reg_username] = {
+            'password': reg_password,
+            'name': reg_name,
+            'age': reg_age,
+            'section': reg_section,
+            'course': reg_course,
+            'address': reg_address
+        }
+        save_credentials(user_credentials)
         messagebox.showinfo("Registration Successful", "User registered successfully")
         register_window.destroy()
 
 # Function to open the registration window
 def open_register_window():
-    global register_window, entry_reg_username, entry_reg_password
+    global register_window, entry_reg_username, entry_reg_password, entry_reg_name, entry_reg_age, entry_reg_section, entry_reg_course, entry_reg_address
     
     register_window = tk.Toplevel(root)
     register_window.title("Register")
-    register_window.geometry("300x200")
+    register_window.geometry("300x400")
     
     label_reg_username = tk.Label(register_window, text="Username")
     label_reg_username.pack(pady=5)
@@ -69,39 +79,75 @@ def open_register_window():
     entry_reg_password = tk.Entry(register_window, show="*")
     entry_reg_password.pack(pady=5)
     
+    label_reg_name = tk.Label(register_window, text="Name")
+    label_reg_name.pack(pady=5)
+    
+    entry_reg_name = tk.Entry(register_window)
+    entry_reg_name.pack(pady=5)
+    
+    label_reg_age = tk.Label(register_window, text="Age")
+    label_reg_age.pack(pady=5)
+    
+    entry_reg_age = tk.Entry(register_window)
+    entry_reg_age.pack(pady=5)
+    
+    label_reg_section = tk.Label(register_window, text="Section")
+    label_reg_section.pack(pady=5)
+    
+    entry_reg_section = tk.Entry(register_window)
+    entry_reg_section.pack(pady=5)
+    
+    label_reg_course = tk.Label(register_window, text="Course")
+    label_reg_course.pack(pady=5)
+    
+    entry_reg_course = tk.Entry(register_window)
+    entry_reg_course.pack(pady=5)
+    
+    label_reg_address = tk.Label(register_window, text="Home Address")
+    label_reg_address.pack(pady=5)
+    
+    entry_reg_address = tk.Entry(register_window)
+    entry_reg_address.pack(pady=5)
+    
     button_register = tk.Button(register_window, text="Register", command=register)
     button_register.pack(pady=10)
 
 # Function to open the student information window
-def show_information():
+def show_information(username):
     info_window = tk.Toplevel()
     info_window.title("Student Information")
     info_window.geometry("300x200")
+
+    # Retrieve student details
+    student_info = user_credentials[username]
 
     # Add labels and other widgets to display student information
     label_info = tk.Label(info_window, text="Student Information", font=("Helvetica", 16))
     label_info.pack(pady=10)
 
-    label_name = tk.Label(info_window, text="Name: John Doe")
+    label_name = tk.Label(info_window, text=f"Name: {student_info['name']}")
     label_name.pack(pady=5)
 
-    label_id = tk.Label(info_window, text="Student ID: 123456")
-    label_id.pack(pady=5)
+    label_age = tk.Label(info_window, text=f"Age: {student_info['age']}")
+    label_age.pack(pady=5)
 
-    label_course = tk.Label(info_window, text="Course: Computer Science")
+    label_section = tk.Label(info_window, text=f"Section: {student_info['section']}")
+    label_section.pack(pady=5)
+
+    label_course = tk.Label(info_window, text=f"Course: {student_info['course']}")
     label_course.pack(pady=5)
 
-    label_year = tk.Label(info_window, text="Year: Sophomore")
-    label_year.pack(pady=5)
+    label_address = tk.Label(info_window, text=f"Home Address: {student_info['address']}")
+    label_address.pack(pady=5)
 
 # Function to open the dashboard window
-def open_dashboard():
+def open_dashboard(username):
     dashboard = tk.Toplevel()
     dashboard.title("Dashboard")
     dashboard.geometry("300x400")
 
     # Buttons for different functionalities
-    button_info = tk.Button(dashboard, text="Information", width=20, command=show_information)
+    button_info = tk.Button(dashboard, text="Information", width=20, command=lambda: show_information(username))
     button_info.pack(pady=10)
 
     button_result = tk.Button(dashboard, text="Result", width=20)
